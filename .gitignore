@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.*
+
+# Next.js
+.next/
+.next-dev/
+.next-export/
+out/
+build/
+dist/
+
+# Environment files
+.env
+.env*.local
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# TypeScript
+*.tsbuildinfo
+
+# Test and automation output
+coverage/
+test-results/
+playwright-report/
+.playwright-cli/
+
+# Local workspace state
+.codex/
+.codex-run/
+.codex-remote-attachments/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Claude Code local settings (machine-specific)
+.claude/settings.local.json
+
+# Staged occt-wasm runtime (copied from node_modules by scripts/copy-occt-wasm.mjs)
+apps/web/public/occt/
