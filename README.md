@@ -1,6 +1,6 @@
 # Cadimac
 
-A local-first 3D CAD design editor, optimised for touchpad use and for working without a mouse, anywhere you carry your Mac.
+A local-first 3D CAD editor, optimised for touchpad use and for working without a mouse, anywhere you carry your Mac.
 
 cadimac is a fork of [SketchForge-3D](https://github.com/Formsmith746/SketchForge-3D) by the SketchForge contributors.
 
