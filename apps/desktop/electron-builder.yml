@@ -5,12 +5,6 @@ asar: true
 directories:
   output: dist/desktop
 
-publish:
-  provider: github
-  owner: KartofellFirst
-  repo: Cadimac
-  releaseType: release
-
 files:
   - apps/desktop/main.cjs
   - apps/desktop/preload.cjs

@@ -1,5 +1,4 @@
 const { app, BrowserWindow, Menu, Tray, dialog, ipcMain, nativeImage, shell } = require("electron");
-const { autoUpdater } = require("electron-updater");
 const { spawn } = require("node:child_process");
 const fs = require("node:fs");
 const path = require("node:path");
@@ -15,14 +14,8 @@ let tray = null;
 let webServer = null;
 let webServerOutput = "";
 let isQuitting = false;
-let updaterConfigured = false;
 let desktopIpcConfigured = false;
-let updateCheckInFlight = false;
-let manualUpdateCheck = false;
 let downloadedUpdateReady = false;
-let updateInstallRequested = false;
-let lastUpdateCheckResult = null;
-let lastUpdateCheckError = "";
 
 function appendServerOutput(chunk) {
   webServerOutput += String(chunk);
@@ -111,146 +104,11 @@ function showMainWindow() {
   mainWindow.focus();
 }
 
-function installDownloadedUpdate() {
-  if (!downloadedUpdateReady) return;
-  isQuitting = true;
-  stopPackagedWebServer();
-  setImmediate(() => autoUpdater.quitAndInstall(false, true));
-}
-
-async function downloadAndInstallDesktopUpdate() {
-  if (!app.isPackaged) {
-    return desktopUpdatePayload(null, "Updates can only be installed from the packaged app.");
-  }
-
-  lastUpdateCheckError = "";
-  try {
-    let result = lastUpdateCheckResult;
-    if (!result?.isUpdateAvailable) {
-      result = await autoUpdater.checkForUpdates();
-      lastUpdateCheckResult = result;
-    }
-    if (!result?.isUpdateAvailable) {
-      return desktopUpdatePayload(result);
-    }
-
-    updateInstallRequested = true;
-    await autoUpdater.downloadUpdate();
-    return desktopUpdatePayload(result);
-  } catch (error) {
-    updateInstallRequested = false;
-    const message = error instanceof Error ? error.message : String(error);
-    lastUpdateCheckError = message;
-    return desktopUpdatePayload(lastUpdateCheckResult, message);
-  }
-}
-
-function desktopUpdatePayload(result = lastUpdateCheckResult, errorMessage = lastUpdateCheckError) {
-  return {
-    currentVersion: app.getVersion(),
-    latestVersion: result?.updateInfo?.version || null,
-    updateAvailable: Boolean(result?.isUpdateAvailable),
-    downloaded: downloadedUpdateReady,
-    checkedAt: new Date().toISOString(),
-    error: errorMessage || undefined,
-  };
-}
-
-async function checkForDesktopUpdates(manual = false) {
-  if (!app.isPackaged) {
-    if (manual) {
-      await dialog.showMessageBox({
-        type: "info",
-        title: "Updates",
-        message: "Automatic updates are tested from the installed Cadimac app.",
-      });
-    }
-    return desktopUpdatePayload(null);
-  }
-  if (downloadedUpdateReady) {
-    return desktopUpdatePayload();
-  }
-  if (updateCheckInFlight) {
-    return desktopUpdatePayload();
-  }
-
-  manualUpdateCheck = manualUpdateCheck || manual;
-  updateCheckInFlight = true;
-  lastUpdateCheckError = "";
-  try {
-    const result = await autoUpdater.checkForUpdates();
-    lastUpdateCheckResult = result;
-    return desktopUpdatePayload(result);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    lastUpdateCheckError = message;
-    if (manualUpdateCheck) {
-      dialog.showErrorBox("Could not check for updates", message);
-      manualUpdateCheck = false;
-    }
-    return desktopUpdatePayload(null, message);
-  } finally {
-    updateCheckInFlight = false;
-  }
-}
-
 function setupDesktopIpc() {
   if (desktopIpcConfigured) return;
   desktopIpcConfigured = true;
 
   ipcMain.handle("sketchforge:get-version", () => app.getVersion());
-  ipcMain.handle("sketchforge:check-for-updates", () => checkForDesktopUpdates(false));
-  ipcMain.handle("sketchforge:install-update", () => downloadAndInstallDesktopUpdate());
-}
-
-function setupDesktopUpdater() {
-  if (updaterConfigured || !app.isPackaged) return;
-  updaterConfigured = true;
-
-  autoUpdater.autoDownload = false;
-  autoUpdater.autoInstallOnAppQuit = false;
-  autoUpdater.allowPrerelease = false;
-
-  autoUpdater.on("update-available", (info) => {
-    if (!manualUpdateCheck) return;
-    manualUpdateCheck = false;
-    void dialog.showMessageBox({
-      type: "info",
-      title: "SketchForge update",
-      message: `SketchForge ${info.version} is available.`,
-      detail: "Open Settings and press Update to install it.",
-    });
-  });
-
-  autoUpdater.on("update-not-available", () => {
-    if (!manualUpdateCheck) return;
-    manualUpdateCheck = false;
-    void dialog.showMessageBox({
-      type: "info",
-      title: "Cadimac updates",
-      message: "Cadimac is up to date.",
-    });
-  });
-
-  autoUpdater.on("download-progress", (progress) => {
-    if (tray) tray.setToolTip(`Downloading update ${Math.round(progress.percent)}%`);
-  });
-
-  autoUpdater.on("update-downloaded", (info) => {
-    downloadedUpdateReady = true;
-    if (tray) tray.setToolTip(`Cadimac ${info.version} ready to install`);
-    if (updateInstallRequested) installDownloadedUpdate();
-  });
-
-  autoUpdater.on("error", (error) => {
-    if (tray) tray.setToolTip("Cadimac");
-    if (!manualUpdateCheck) return;
-    manualUpdateCheck = false;
-    dialog.showErrorBox("Could not update Cadimac", error instanceof Error ? error.message : String(error));
-  });
-
-  setTimeout(() => void checkForDesktopUpdates(false), 4_000).unref();
-  setInterval(() => void checkForDesktopUpdates(false), 6 * 60 * 60 * 1000).unref();
 }
 
 function createTray() {
@@ -264,18 +122,10 @@ function createTray() {
       label: "Open Cadimac",
       click: showMainWindow,
     },
-    {
-      label: "Check for Updates",
-      click: () => void checkForDesktopUpdates(true),
-    },
     { type: "separator" },
     {
       label: "Quit Cadimac",
       click: () => {
-        if (downloadedUpdateReady) {
-          installDownloadedUpdate();
-          return;
-        }
         isQuitting = true;
         app.quit();
       },
@@ -294,7 +144,7 @@ function createMainWindow(url) {
     minWidth: 1100,
     minHeight: 700,
     show: false,
-    title: "SketchForge",
+    title: "Cadimac",
     icon: iconPath,
     webPreferences: {
       contextIsolation: true,
@@ -357,12 +207,11 @@ async function startDesktop() {
     setupDesktopIpc();
     createTray();
     createMainWindow(url);
-    setupDesktopUpdater();
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     const detail = webServerOutput.trim();
     dialog.showErrorBox(
-      "SketchForge could not start",
+      "Cadimac could not start",
       detail ? `${message}\n\n${detail}` : message,
     );
     app.quit();
@@ -377,7 +226,7 @@ if (!hasSingleInstanceLock) {
   app.on("second-instance", showMainWindow);
 
   app.whenReady().then(() => {
-    if (process.platform === "win32") app.setAppUserModelId("com.sketchforge.desktop");
+    if (process.platform === "win32") app.setAppUserModelId("com.cadimac.desktop");
     void startDesktop();
 
     app.on("activate", () => {
@@ -396,6 +245,6 @@ app.on("before-quit", () => {
 });
 
 app.on("window-all-closed", () => {
-  // Keep SketchForge available from the system tray. Use Quit SketchForge
+  // Keep Cadimac available from the system tray. Use Quit Cadimac
   // from the tray menu when the user wants to fully stop the application.
 });

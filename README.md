@@ -1,4 +1,4 @@
-# Сadimac
+# Cadimac
 
 A local-first 3D CAD design editor, optimised for touchpad use and for working without a mouse, anywhere you carry your Mac.
 
@@ -53,4 +53,8 @@ cadimac is licensed under the **GNU Affero General Public License v3.0 only** (`
 
 This is a modified version of SketchForge-3D. Original copyright © 2026 SketchForge contributors. If you host a modified version for others over a network, you must offer them the corresponding source code under the same license.
 
+<<<<<<< HEAD
 Original project: https://github.com/Formsmith746/SketchForge-3D
+=======
+Original project: https://github.com/Formsmith746/SketchForge-3D
+>>>>>>> 376d91e (Deeper autoupdates annihilation)
