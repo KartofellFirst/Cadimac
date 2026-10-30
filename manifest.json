@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Cadimac extension for Tinkercad",
+  "version": "1.0.0",
+  "description": "brings normal touchpad controls to Tinkercad",
+  "content_scripts": [
+    {
+      "matches": ["https://www.tinkercad.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_start",
+      "all_frames": false,
+      "world": "MAIN"
+    }
+  ]
+}
