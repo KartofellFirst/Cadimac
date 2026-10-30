@@ -12,10 +12,11 @@ Download a .zip copy of the repo <br>
 unpack it <br>
 go to extensions page and install it (requires developer mode turned on)
 
-<br><br>
+<br>
 _firefox:_ <br>
 https://addons.mozilla.org/ru/firefox/addon/better-tinkercad/ <br>
 this extension has to be available in mozilla store
 
 <br>
+
 _Not tested in Safari. Not affiliated with Autodesk;_
