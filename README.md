@@ -12,14 +12,10 @@ Download a .zip copy of the repo <br>
 unpack it <br>
 go to extensions page and install it (requires developer mode turned on)
 
-<br>
+<br><br>
 _firefox:_ <br>
-Download a .zip copy of the repo <br>
-unpack it <br>
-go to <kbd>about:debugging#/runtime/this-firefox</kbd>
-click <kbd>load temporary Add-on</kbd>
-select `manifest.json` in an unpacked folder
-(this extension will last until the next firefox restart)
+https://addons.mozilla.org/ru/firefox/addon/better-tinkercad/ <br>
+this extension has to be available in mozilla store
 
 <br>
 _Not tested in Safari. Not affiliated with Autodesk;_
