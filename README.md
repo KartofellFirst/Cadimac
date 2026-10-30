@@ -17,6 +17,6 @@ _firefox:_ <br>
 https://addons.mozilla.org/ru/firefox/addon/better-tinkercad/ <br>
 this extension has to be available in mozilla store
 
-<br>
+<br><br>
 
 _Not tested in Safari. Not affiliated with Autodesk;_
