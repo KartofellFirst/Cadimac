@@ -13,9 +13,10 @@ unpack it <br>
 go to extensions page and install it (requires developer mode turned on)
 
 <br>
+    
 _firefox:_ <br>
 https://addons.mozilla.org/ru/firefox/addon/better-tinkercad/ <br>
-this extension has to be available in mozilla store
+Available in mozilla store
 
 <br><br>
 
